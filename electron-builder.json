@@ -1,0 +1,39 @@
+{
+  "appId": "com.audiobookshelf.htpc",
+  "productName": "Audiobookshelf HTPC",
+  "directories": {
+    "output": "release",
+    "buildResources": "build-resources"
+  },
+  "files": [
+    "dist/**/*",
+    "electron/**/*",
+    "build-resources/icon.png",
+    "package.json"
+  ],
+  "afterPack": "./scripts/afterPack.js",
+  "linux": {
+    "target": [
+      {
+        "target": "AppImage",
+        "arch": ["x64"]
+      }
+    ],
+    "category": "AudioVideo",
+    "icon": "build-resources/icon.png",
+    "executableName": "audiobookshelf-htpc",
+    "synopsis": "HTPC client for Audiobookshelf",
+    "description": "A 10-foot couch-friendly client for an Audiobookshelf server.",
+    "desktop": {
+      "Name": "Audiobookshelf HTPC",
+      "Comment": "HTPC client for Audiobookshelf",
+      "Categories": "AudioVideo;Audio;Player;",
+      "StartupWMClass": "audiobookshelf-htpc",
+      "Terminal": "false",
+      "Type": "Application"
+    }
+  },
+  "appImage": {
+    "artifactName": "Audiobookshelf-HTPC-${version}-${arch}.AppImage"
+  }
+}

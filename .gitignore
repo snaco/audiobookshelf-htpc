@@ -1,0 +1,8 @@
+node_modules/
+dist/
+release/
+.angular/
+*.js.map
+.claude/
+.idea/
+.vscode/

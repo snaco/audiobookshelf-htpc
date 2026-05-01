@@ -1,0 +1,44 @@
+{
+  "name": "audiobookshelf-htpc",
+  "version": "1.0.0",
+  "description": "HTPC client for Audiobookshelf",
+  "main": "electron/main.js",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "electron": "NODE_ENV=development electron .",
+    "electron:dev": "concurrently \"ng serve\" \"wait-on http://localhost:4200 && NODE_ENV=development electron .\"",
+    "icon": "node scripts/generate-icon.js",
+    "dist": "npm run icon && ng build --base-href ./ && electron-builder --linux AppImage --x64",
+    "dist:arm64": "npm run icon && ng build --base-href ./ && electron-builder --linux AppImage --arm64"
+  },
+  "dependencies": {
+    "@angular/animations": "^17.3.0",
+    "@angular/common": "^17.3.0",
+    "@angular/compiler": "^17.3.0",
+    "@angular/core": "^17.3.0",
+    "@angular/forms": "^17.3.0",
+    "@angular/platform-browser": "^17.3.0",
+    "@angular/platform-browser-dynamic": "^17.3.0",
+    "@angular/router": "^17.3.0",
+    "echarts": "^5.5.0",
+    "ngx-echarts": "^17.0.0",
+    "primeicons": "^7.0.0",
+    "primeflex": "^3.3.1",
+    "primeng": "^17.18.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0",
+    "zone.js": "~0.14.3"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^17.3.0",
+    "@angular/cli": "^17.3.0",
+    "@angular/compiler-cli": "^17.3.0",
+    "concurrently": "^8.2.0",
+    "electron": "^29.0.0",
+    "electron-builder": "^24.6.0",
+    "typescript": "~5.4.2",
+    "wait-on": "^7.2.0"
+  }
+}
