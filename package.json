@@ -1,0 +1,66 @@
+{
+  "name": "audiobookshelf-htpc",
+  "version": "1.0.0",
+  "description": "Audiobookshelf HTPC client with game controller support",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
+    "electron:build": "npm run build && electron-builder",
+    "electron:build:linux": "npm run build && electron-builder --linux"
+  },
+  "keywords": [
+    "audiobookshelf",
+    "htpc",
+    "electron",
+    "gamepad"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.8",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.19",
+    "concurrently": "^8.2.2",
+    "electron": "^41.4.0",
+    "electron-builder": "^26.8.1",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5.4.5",
+    "vite": "^5.4.0",
+    "vite-plugin-electron": "^0.28.6",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.audiobookshelf.htpc",
+    "productName": "Audiobookshelf HTPC",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "package.json"
+    ],
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "AudioVideo",
+      "icon": "build/icon.png"
+    }
+  },
+  "overrides": {
+    "glob": "^10.4.0",
+    "rimraf": "^5.0.0"
+  }
+}
