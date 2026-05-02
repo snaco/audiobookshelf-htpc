@@ -46,7 +46,7 @@ interface StatCard {
 
         <div class="charts-grid">
           <div class="chart-card wide">
-            <h3 class="chart-title">Listening Time (last 12 months)</h3>
+            <h3 class="chart-title">Listening Time (last 30 days)</h3>
             <div echarts [options]="listeningTimeChart" class="chart"></div>
           </div>
 
@@ -323,6 +323,12 @@ export class StatsComponent implements OnInit {
     return h > 0 ? `${h}h ${m}m` : `${m}m`;
   }
 
+  private toMs(ts: number | null | undefined): number {
+    if (!ts) return 0;
+    // ABS stores timestamps as Date.now() (ms). If value looks like seconds (< 1e11), convert.
+    return ts > 1e11 ? ts : ts * 1000;
+  }
+
   formatPct(progress: number): string {
     return Math.round(progress * 100) + '%';
   }
@@ -356,18 +362,19 @@ export class StatsComponent implements OnInit {
 
   private buildListeningTimeChart(sessions: ListeningSession[]): void {
     const now = new Date();
-    const months: { label: string; seconds: number }[] = [];
+    const days: { label: string; seconds: number }[] = [];
 
-    for (let i = 11; i >= 0; i--) {
-      const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
-      const startSec = start.getTime() / 1000;
-      const endSec = end.getTime() / 1000;
-      const label = start.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+    for (let i = 29; i >= 0; i--) {
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      const end   = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i + 1);
+      const label = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       const seconds = sessions
-        .filter(s => (s.updatedAt ?? s.startedAt) >= startSec && (s.updatedAt ?? s.startedAt) < endSec)
+        .filter(s => {
+          const ts = this.toMs(s.updatedAt ?? s.startedAt);
+          return ts >= start.getTime() && ts < end.getTime();
+        })
         .reduce((acc, s) => acc + (s.timeListening ?? 0), 0);
-      months.push({ label, seconds });
+      days.push({ label, seconds });
     }
 
     this.listeningTimeChart = {
@@ -375,10 +382,10 @@ export class StatsComponent implements OnInit {
       grid: { left: 16, right: 16, bottom: 24, top: 16, containLabel: true },
       xAxis: {
         type: 'category',
-        data: months.map(m => m.label),
+        data: days.map(d => d.label),
         axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } },
         axisTick: { show: false },
-        axisLabel: { color: '#64748b', fontSize: 11, rotate: 30 }
+        axisLabel: { color: '#64748b', fontSize: 10, rotate: 35, interval: 4 }
       },
       yAxis: {
         type: 'value',
@@ -388,7 +395,7 @@ export class StatsComponent implements OnInit {
       },
       series: [{
         type: 'bar',
-        data: months.map(m => m.seconds),
+        data: days.map(d => d.seconds),
         itemStyle: {
           color: {
             type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
@@ -399,7 +406,7 @@ export class StatsComponent implements OnInit {
           },
           borderRadius: [6, 6, 0, 0]
         },
-        barMaxWidth: 40
+        barMaxWidth: 20
       }]
     };
   }
@@ -445,8 +452,7 @@ export class StatsComponent implements OnInit {
     }
 
     progress.filter(p => p.isFinished).forEach(p => {
-      // Use finishedAt if available, fall back to lastUpdate
-      const ts = (p.finishedAt ?? p.lastUpdate ?? 0) * 1000;
+      const ts = this.toMs(p.finishedAt ?? p.lastUpdate);
       const d = new Date(ts);
       const key = d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
       if (key in monthCount) monthCount[key]++;

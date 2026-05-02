@@ -157,8 +157,8 @@ export class BookTileComponent implements OnInit {
 
   ngOnInit(): void {
     this.coverUrl = this.absService.coverUrl(this.item.id);
-    this.title = this.item.media.metadata.title;
-    this.author = this.item.media.metadata.authors.map(a => a.name).join(', ');
+    this.title = this.item.media?.metadata?.title ?? '';
+    this.author = this.item.media?.metadata?.authors?.map(a => a.name).join(', ') ?? '';
 
     const prog = this.mediaProgress ?? this.item.userMediaProgress;
     if (prog) {
