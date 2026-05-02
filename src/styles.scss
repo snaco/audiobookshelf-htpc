@@ -1,0 +1,155 @@
+:root {
+  --bg-primary: #08080f;
+  --bg-secondary: #0f0f1a;
+  --bg-card: #151520;
+  --bg-hover: #1e1e30;
+  --accent: #8b5cf6;
+  --accent-bright: #a78bfa;
+  --accent-hover: #7c3aed;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #475569;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-focus: #8b5cf6;
+  --success: #22c55e;
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.6);
+  --nav-width: 72px;
+  --radius: 10px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+}
+
+/* PrimeNG overrides for dark theme */
+.p-component {
+  font-family: inherit;
+}
+
+.p-inputtext {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+  color: var(--text-primary) !important;
+  border-radius: var(--radius) !important;
+
+  &:focus {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2) !important;
+  }
+}
+
+.p-password-input {
+  width: 100%;
+}
+
+.p-button {
+  border-radius: var(--radius) !important;
+  font-weight: 600 !important;
+}
+
+.p-button.p-button-primary {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+
+  &:hover {
+    background: var(--accent-hover) !important;
+    border-color: var(--accent-hover) !important;
+  }
+
+  &:focus {
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3) !important;
+  }
+}
+
+.p-dropdown {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+  border-radius: var(--radius) !important;
+
+  .p-dropdown-label {
+    color: var(--text-primary) !important;
+  }
+
+  &:not(.p-disabled).p-focus {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2) !important;
+  }
+}
+
+.p-dropdown-panel {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+  border-radius: var(--radius) !important;
+
+  .p-dropdown-item {
+    color: var(--text-primary) !important;
+
+    &:hover, &.p-highlight {
+      background: var(--bg-hover) !important;
+      color: var(--accent-bright) !important;
+    }
+  }
+}
+
+.p-progressbar {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 4px !important;
+  height: 4px !important;
+
+  .p-progressbar-value {
+    background: var(--accent) !important;
+    border-radius: 4px !important;
+  }
+}
+
+/* Focus ring for gamepad navigation */
+:focus-visible {
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 2px;
+}
+
+/* Scrollbar styles */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: 4px;
+
+  &:hover {
+    background: var(--text-secondary);
+  }
+}
+
+/* Utility classes */
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
