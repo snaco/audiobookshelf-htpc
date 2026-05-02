@@ -14,7 +14,7 @@ import { FocusableDirective } from '../../shared/directives/focusable.directive'
         <h1 class="page-title">Settings</h1>
       </header>
 
-      <div class="settings-sections">
+      <div class="settings-sections" data-focus-zone="grid">
         <section class="settings-section">
           <h2 class="section-title">Account</h2>
 

@@ -24,7 +24,7 @@ import { LibraryItem, PersonalizedShelf } from '../../core/models/abs.models';
           <i class="pi pi-spin pi-spinner" style="font-size: 2rem; color: var(--accent)"></i>
         </div>
       } @else {
-        <div class="shelves">
+        <div class="shelves" data-focus-zone="grid">
           @for (shelf of shelves; track shelf.id) {
             @if (shelfItems(shelf).length > 0) {
               <app-scrollable-row [title]="shelf.label">

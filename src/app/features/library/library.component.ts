@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewInit, NgZone } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewChecked, ElementRef, ViewChild, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { AudiobookshelfService } from '../../core/services/audiobookshelf.service';
@@ -29,7 +29,7 @@ import { LibraryItem } from '../../core/models/abs.models';
           <p>No books found</p>
         </div>
       } @else {
-        <div class="book-grid">
+        <div class="book-grid" data-focus-zone="grid">
           @for (item of items; track item.id) {
             <app-book-tile [item]="item" />
           }
@@ -91,7 +91,7 @@ import { LibraryItem } from '../../core/models/abs.models';
     }
   `]
 })
-export class LibraryComponent implements OnInit, AfterViewInit, OnDestroy {
+export class LibraryComponent implements OnInit, AfterViewChecked, OnDestroy {
   @ViewChild('sentinel') sentinel!: ElementRef<HTMLDivElement>;
 
   items: LibraryItem[] = [];
@@ -125,8 +125,11 @@ export class LibraryComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  ngAfterViewInit(): void {
-    this.setupObserver();
+  ngAfterViewChecked(): void {
+    if (!this.initialized && this.sentinel) {
+      this.initialized = true;
+      this.setupObserver();
+    }
   }
 
   ngOnDestroy(): void {

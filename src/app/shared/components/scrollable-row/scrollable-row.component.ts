@@ -35,7 +35,7 @@ import { CommonModule } from '@angular/common';
       gap: 16px;
       overflow-x: auto;
       overflow-y: visible;
-      padding: 8px 4px 16px;
+      padding: 8px 8px 16px;
       scroll-snap-type: x proximity;
       scroll-behavior: smooth;
       -ms-overflow-style: none;

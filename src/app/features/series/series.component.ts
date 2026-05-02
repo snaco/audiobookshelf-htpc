@@ -30,6 +30,7 @@ import { ButtonModule } from 'primeng/button';
           <p>No series found</p>
         </div>
       } @else {
+        <div data-focus-zone="grid">
         <div class="series-list">
           @for (s of series; track s.id) {
             <div class="series-row" (click)="onSeriesSelect(s)" (keydown.enter)="onSeriesSelect(s)" appFocusable>
@@ -81,6 +82,7 @@ import { ButtonModule } from 'primeng/button';
             />
           </div>
         }
+        </div>
       }
     </div>
   `,

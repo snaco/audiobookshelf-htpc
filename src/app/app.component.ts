@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { NavComponent } from './shared/components/nav/nav.component';
 import { GamepadService } from './core/services/gamepad.service';
+import { FocusService } from './core/services/focus.service';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
@@ -46,9 +47,26 @@ import { MessageService } from 'primeng/api';
 export class AppComponent implements OnInit {
   isLoginRoute = false;
 
+  @HostListener('document:keydown', ['$event'])
+  onKeydown(event: KeyboardEvent): void {
+    const tag = (event.target as HTMLElement).tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || (event.target as HTMLElement).isContentEditable) return;
+
+    const dir: Record<string, 'up' | 'down' | 'left' | 'right'> = {
+      ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right'
+    };
+    if (dir[event.key]) {
+      event.preventDefault();
+      this.focusService.moveFocus(dir[event.key]);
+    } else if (event.key === 'Enter') {
+      this.focusService.activate();
+    }
+  }
+
   constructor(
     private router: Router,
-    private gamepadService: GamepadService
+    private gamepadService: GamepadService,
+    private focusService: FocusService
   ) {
     this.router.events.pipe(
       filter(e => e instanceof NavigationEnd)

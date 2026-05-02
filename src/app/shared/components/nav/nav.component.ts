@@ -14,7 +14,7 @@ interface NavItem {
   standalone: true,
   imports: [RouterLink, RouterLinkActive, FocusableDirective, TooltipModule],
   template: `
-    <nav class="side-nav">
+    <nav class="side-nav" data-focus-zone="nav">
       <div class="nav-top">
         <div class="nav-logo">
           <i class="pi pi-headphones"></i>
