@@ -46,7 +46,7 @@ interface StatCard {
 
         <div class="charts-grid">
           <div class="chart-card wide">
-            <h3 class="chart-title">Listening Time (last 8 weeks)</h3>
+            <h3 class="chart-title">Listening Time (last 12 months)</h3>
             <div echarts [options]="listeningTimeChart" class="chart"></div>
           </div>
 
@@ -56,7 +56,7 @@ interface StatCard {
           </div>
 
           <div class="chart-card">
-            <h3 class="chart-title">Books Completed by Month</h3>
+            <h3 class="chart-title">Books Completed by Month (last 2 years)</h3>
             <div echarts [options]="booksCompletedChart" class="chart"></div>
           </div>
         </div>
@@ -298,16 +298,18 @@ export class StatsComponent implements OnInit {
         const allSessions = sessions.sessions ?? [];
 
         this.buildStatCards(allProgress, allSessions);
-        this.buildInProgress(allProgress);
         this.buildListeningTimeChart(allSessions);
         this.buildBooksCompletedChart(allProgress);
 
         if (libraries.length) {
-          this.absService.getLibraryItems(libraries[0].id, { limit: 200, include: 'progress' }).subscribe(res => {
+          this.absService.getLibraryItems(libraries[0].id, { limit: 500, include: 'progress' }).subscribe(res => {
+            const titleMap = new Map(res.results.map(item => [item.id, item.media?.metadata?.title ?? item.id]));
+            this.buildInProgress(allProgress, titleMap);
             this.buildGenreChart(res.results);
             this.loading = false;
           });
         } else {
+          this.buildInProgress(allProgress, new Map());
           this.loading = false;
         }
       },
@@ -339,31 +341,33 @@ export class StatsComponent implements OnInit {
     ];
   }
 
-  private buildInProgress(progress: MediaProgress[]): void {
+  private buildInProgress(progress: MediaProgress[], titleMap: Map<string, string>): void {
     this.inProgress = progress
       .filter(p => !p.isFinished && p.progress > 0.01)
       .sort((a, b) => b.lastUpdate - a.lastUpdate)
       .slice(0, 8)
       .map(p => ({
         libraryItemId: p.libraryItemId,
-        title: p.libraryItemId,
+        title: titleMap.get(p.libraryItemId) ?? 'Unknown',
         progress: p.progress,
         timeLeft: (p.duration ?? 0) * (1 - p.progress)
       }));
   }
 
   private buildListeningTimeChart(sessions: ListeningSession[]): void {
-    const now = Date.now();
-    const weeks: { label: string; seconds: number }[] = [];
+    const now = new Date();
+    const months: { label: string; seconds: number }[] = [];
 
-    for (let i = 7; i >= 0; i--) {
-      const start = now - (i + 1) * 7 * 24 * 3600 * 1000;
-      const end = now - i * 7 * 24 * 3600 * 1000;
-      const label = new Date(start).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    for (let i = 11; i >= 0; i--) {
+      const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+      const startSec = start.getTime() / 1000;
+      const endSec = end.getTime() / 1000;
+      const label = start.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
       const seconds = sessions
-        .filter(s => s.updatedAt >= start / 1000 && s.updatedAt < end / 1000)
+        .filter(s => (s.updatedAt ?? s.startedAt) >= startSec && (s.updatedAt ?? s.startedAt) < endSec)
         .reduce((acc, s) => acc + (s.timeListening ?? 0), 0);
-      weeks.push({ label, seconds });
+      months.push({ label, seconds });
     }
 
     this.listeningTimeChart = {
@@ -371,10 +375,10 @@ export class StatsComponent implements OnInit {
       grid: { left: 16, right: 16, bottom: 24, top: 16, containLabel: true },
       xAxis: {
         type: 'category',
-        data: weeks.map(w => w.label),
+        data: months.map(m => m.label),
         axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } },
         axisTick: { show: false },
-        axisLabel: { color: '#64748b', fontSize: 11 }
+        axisLabel: { color: '#64748b', fontSize: 11, rotate: 30 }
       },
       yAxis: {
         type: 'value',
@@ -384,7 +388,7 @@ export class StatsComponent implements OnInit {
       },
       series: [{
         type: 'bar',
-        data: weeks.map(w => w.seconds),
+        data: months.map(m => m.seconds),
         itemStyle: {
           color: {
             type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
@@ -434,14 +438,16 @@ export class StatsComponent implements OnInit {
     const monthCount: Record<string, number> = {};
     const now = new Date();
 
-    for (let i = 11; i >= 0; i--) {
+    for (let i = 23; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const key = d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
       monthCount[key] = 0;
     }
 
-    progress.filter(p => p.isFinished && p.finishedAt).forEach(p => {
-      const d = new Date((p.finishedAt ?? 0) * 1000);
+    progress.filter(p => p.isFinished).forEach(p => {
+      // Use finishedAt if available, fall back to lastUpdate
+      const ts = (p.finishedAt ?? p.lastUpdate ?? 0) * 1000;
+      const d = new Date(ts);
       const key = d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
       if (key in monthCount) monthCount[key]++;
     });
