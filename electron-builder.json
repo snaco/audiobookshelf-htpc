@@ -1,0 +1,23 @@
+{
+  "appId": "com.audiobookshelf.htpc",
+  "productName": "Audiobookshelf HTPC",
+  "directories": {
+    "output": "release",
+    "buildResources": "build-resources"
+  },
+  "files": [
+    "dist/**/*",
+    "electron/**/*",
+    "package.json"
+  ],
+  "linux": {
+    "target": [
+      {
+        "target": "AppImage",
+        "arch": ["x64"]
+      }
+    ],
+    "category": "AudioVideo",
+    "icon": "build-resources/icon.png"
+  }
+}
