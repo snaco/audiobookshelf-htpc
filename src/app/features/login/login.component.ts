@@ -216,21 +216,26 @@ export class LoginComponent {
 
     this.auth.login(this.serverUrl, this.username, this.password).subscribe({
       next: () => {
+        // loading stays true while navigating — it will be destroyed with this component
         this.router.navigate(['/home']).then(navigated => {
-          // Navigation can silently fail (e.g. guard redirect) — reset state if we're still here
           if (!navigated) {
             this.loading = false;
-            this.error = 'Login succeeded but navigation failed. Please try again.';
+            this.error = 'Authenticated but could not load home. Check console for details.';
           }
+        }).catch(() => {
+          this.loading = false;
+          this.error = 'Navigation error. Please try again.';
         });
       },
       error: err => {
         this.loading = false;
-        this.error = err.status === 401
-          ? 'Invalid username or password'
-          : err.message?.includes('No token')
-            ? 'Server response was missing an auth token. Check the server URL.'
-            : 'Could not connect to server. Check the URL and try again.';
+        if (err.status === 401) {
+          this.error = 'Invalid username or password';
+        } else if (err.status === 0 || err.message?.includes('No auth token')) {
+          this.error = 'Server response was missing an auth token — check the console for the response shape.';
+        } else {
+          this.error = `Could not connect to server (${err.status ?? 'unknown error'}). Check the URL and try again.`;
+        }
       }
     });
   }

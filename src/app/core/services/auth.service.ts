@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap, throwError, catchError } from 'rxjs';
+import { Observable, map, catchError, throwError } from 'rxjs';
 import { ABSUser, LoginResponse } from '../models/abs.models';
 
 @Injectable({ providedIn: 'root' })
@@ -19,12 +19,20 @@ export class AuthService {
   login(serverUrl: string, username: string, password: string): Observable<LoginResponse> {
     const cleanUrl = serverUrl.replace(/\/$/, '');
     return this.http.post<LoginResponse>(`${cleanUrl}/login`, { username, password }).pipe(
-      tap(response => {
-        // ABS returns the token inside user; guard against unexpected shapes
-        const token: string | undefined =
-          response.user?.token ?? (response as Record<string, unknown>)['token'] as string | undefined;
+      map(response => {
+        // Defensively extract token — ABS puts it inside user
+        const raw = response as unknown as Record<string, unknown>;
+        const token =
+          (response.user as ABSUser & { token?: string })?.token ??
+          (raw['token'] as string | undefined);
 
-        if (!token) throw new Error('No token in login response');
+        console.debug('[AuthService] login response keys:', Object.keys(raw));
+        console.debug('[AuthService] user keys:', response.user ? Object.keys(response.user) : 'no user');
+        console.debug('[AuthService] extracted token:', token ? `${token.slice(0, 10)}…` : 'MISSING');
+
+        if (!token) {
+          throw { status: 0, message: 'No auth token in server response' };
+        }
 
         this._token.set(token);
         this._user.set(response.user);
@@ -32,6 +40,8 @@ export class AuthService {
         localStorage.setItem('abs_token', token);
         localStorage.setItem('abs_server_url', cleanUrl);
         localStorage.setItem('abs_user', JSON.stringify(response.user));
+
+        return response;
       }),
       catchError(err => throwError(() => err))
     );
@@ -57,7 +67,6 @@ export class AuthService {
 
   private loadStoredToken(): string | null {
     const token = localStorage.getItem('abs_token');
-    // Clear tokens that were stored as the literal string "undefined" / "null" by old code
     if (!token || token === 'undefined' || token === 'null') {
       localStorage.removeItem('abs_token');
       return null;
