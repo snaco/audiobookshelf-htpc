@@ -1,7 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewInit, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { ButtonModule } from 'primeng/button';
 import { AudiobookshelfService } from '../../core/services/audiobookshelf.service';
 import { BookTileComponent } from '../../shared/components/book-tile/book-tile.component';
 import { FocusableDirective } from '../../shared/directives/focusable.directive';
@@ -10,14 +9,9 @@ import { LibraryItem } from '../../core/models/abs.models';
 @Component({
   selector: 'app-library',
   standalone: true,
-  imports: [
-    CommonModule,
-    ButtonModule,
-    BookTileComponent,
-    FocusableDirective
-  ],
+  imports: [CommonModule, BookTileComponent, FocusableDirective],
   template: `
-    <div class="library-page">
+    <div class="library-page" #scrollContainer>
       <header class="page-header">
         <h1 class="page-title">{{ pageTitle }}</h1>
         @if (total > 0) {
@@ -41,17 +35,11 @@ import { LibraryItem } from '../../core/models/abs.models';
           }
         </div>
 
-        @if (hasMore) {
-          <div class="load-more">
-            <p-button
-              label="Load More"
-              [outlined]="true"
-              [loading]="loading"
-              (onClick)="loadMore()"
-              appFocusable
-            />
-          </div>
-        }
+        <div class="sentinel" #sentinel>
+          @if (loading) {
+            <i class="pi pi-spin pi-spinner" style="font-size: 1.5rem; color: var(--accent)"></i>
+          }
+        </div>
       }
     </div>
   `,
@@ -95,14 +83,17 @@ import { LibraryItem } from '../../core/models/abs.models';
       color: var(--text-muted);
     }
 
-    .load-more {
+    .sentinel {
       display: flex;
       justify-content: center;
-      padding: 32px 0;
+      align-items: center;
+      height: 80px;
     }
   `]
 })
-export class LibraryComponent implements OnInit {
+export class LibraryComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild('sentinel') sentinel!: ElementRef<HTMLDivElement>;
+
   items: LibraryItem[] = [];
   total = 0;
   loading = false;
@@ -113,9 +104,13 @@ export class LibraryComponent implements OnInit {
   libraryId = '';
   seriesFilter = '';
 
+  private observer: IntersectionObserver | null = null;
+  private initialized = false;
+
   constructor(
     private absService: AudiobookshelfService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private zone: NgZone
   ) {}
 
   ngOnInit(): void {
@@ -130,13 +125,32 @@ export class LibraryComponent implements OnInit {
     });
   }
 
+  ngAfterViewInit(): void {
+    this.setupObserver();
+  }
+
+  ngOnDestroy(): void {
+    this.observer?.disconnect();
+  }
+
   get hasMore(): boolean {
     return this.items.length < this.total;
   }
 
-  loadMore(): void {
-    this.page++;
-    this.fetchItems(true);
+  private setupObserver(): void {
+    this.observer = new IntersectionObserver(entries => {
+      const entry = entries[0];
+      if (entry.isIntersecting && this.hasMore && !this.loading) {
+        this.zone.run(() => {
+          this.page++;
+          this.fetchItems(true);
+        });
+      }
+    }, { threshold: 0.1 });
+
+    if (this.sentinel) {
+      this.observer.observe(this.sentinel.nativeElement);
+    }
   }
 
   private fetchItems(append = false): void {
