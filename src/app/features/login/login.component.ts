@@ -47,6 +47,7 @@ import { FocusableDirective } from '../../shared/directives/focusable.directive'
               autocomplete="url"
               appFocusable
               required
+              (ngModelChange)="onUrlChange()"
             />
           </div>
 
@@ -79,6 +80,14 @@ import { FocusableDirective } from '../../shared/directives/focusable.directive'
               appFocusable
             />
           </div>
+
+          @if (insecureWarning) {
+            <p-message
+              severity="warn"
+              styleClass="w-full"
+              text="Your server is using HTTP. Credentials will be sent unencrypted. Use HTTPS for security."
+            />
+          }
 
           @if (error) {
             <p-message severity="error" [text]="error" styleClass="w-full" />
@@ -190,22 +199,38 @@ export class LoginComponent {
   password = '';
   loading = false;
   error = '';
+  insecureWarning = false;
 
   constructor(private auth: AuthService, private router: Router) {}
+
+  onUrlChange(): void {
+    this.insecureWarning = this.serverUrl.startsWith('http://');
+  }
 
   onSubmit(): void {
     if (!this.serverUrl || !this.username || !this.password) return;
 
     this.loading = true;
     this.error = '';
+    this.insecureWarning = this.serverUrl.startsWith('http://');
 
     this.auth.login(this.serverUrl, this.username, this.password).subscribe({
-      next: () => this.router.navigate(['/home']),
+      next: () => {
+        this.router.navigate(['/home']).then(navigated => {
+          // Navigation can silently fail (e.g. guard redirect) — reset state if we're still here
+          if (!navigated) {
+            this.loading = false;
+            this.error = 'Login succeeded but navigation failed. Please try again.';
+          }
+        });
+      },
       error: err => {
         this.loading = false;
         this.error = err.status === 401
           ? 'Invalid username or password'
-          : 'Could not connect to server. Check the URL and try again.';
+          : err.message?.includes('No token')
+            ? 'Server response was missing an auth token. Check the server URL.'
+            : 'Could not connect to server. Check the URL and try again.';
       }
     });
   }

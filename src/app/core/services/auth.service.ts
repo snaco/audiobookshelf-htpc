@@ -6,7 +6,7 @@ import { ABSUser, LoginResponse } from '../models/abs.models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private _token = signal<string | null>(localStorage.getItem('abs_token'));
+  private _token = signal<string | null>(this.loadStoredToken());
   private _user = signal<ABSUser | null>(this.loadStoredUser());
   private _serverUrl = signal<string>(localStorage.getItem('abs_server_url') ?? '');
 
@@ -20,10 +20,16 @@ export class AuthService {
     const cleanUrl = serverUrl.replace(/\/$/, '');
     return this.http.post<LoginResponse>(`${cleanUrl}/login`, { username, password }).pipe(
       tap(response => {
-        this._token.set(response.token);
+        // ABS returns the token inside user; guard against unexpected shapes
+        const token: string | undefined =
+          response.user?.token ?? (response as Record<string, unknown>)['token'] as string | undefined;
+
+        if (!token) throw new Error('No token in login response');
+
+        this._token.set(token);
         this._user.set(response.user);
         this._serverUrl.set(cleanUrl);
-        localStorage.setItem('abs_token', response.token);
+        localStorage.setItem('abs_token', token);
         localStorage.setItem('abs_server_url', cleanUrl);
         localStorage.setItem('abs_user', JSON.stringify(response.user));
       }),
@@ -49,8 +55,23 @@ export class AuthService {
     localStorage.setItem('abs_user', JSON.stringify(user));
   }
 
+  private loadStoredToken(): string | null {
+    const token = localStorage.getItem('abs_token');
+    // Clear tokens that were stored as the literal string "undefined" / "null" by old code
+    if (!token || token === 'undefined' || token === 'null') {
+      localStorage.removeItem('abs_token');
+      return null;
+    }
+    return token;
+  }
+
   private loadStoredUser(): ABSUser | null {
     const stored = localStorage.getItem('abs_user');
-    return stored ? JSON.parse(stored) : null;
+    if (!stored || stored === 'undefined' || stored === 'null') return null;
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return null;
+    }
   }
 }

@@ -2,7 +2,6 @@ export interface LoginResponse {
   user: ABSUser;
   userDefaultLibraryId: string;
   serverSettings: Record<string, unknown>;
-  token: string;
 }
 
 export interface ABSUser {
