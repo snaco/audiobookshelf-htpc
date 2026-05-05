@@ -7,7 +7,7 @@ import { AudiobookshelfService } from '../../core/services/audiobookshelf.servic
 import { AuthService } from '../../core/services/auth.service';
 import { ScrollableRowComponent } from '../../shared/components/scrollable-row/scrollable-row.component';
 import { BookTileComponent } from '../../shared/components/book-tile/book-tile.component';
-import { LibraryItem, PersonalizedShelf } from '../../core/models/abs.models';
+import { LibraryItem, MediaProgress, PersonalizedShelf } from '../../core/models/abs.models';
 
 @Component({
   selector: 'app-home',
@@ -29,26 +29,32 @@ import { LibraryItem, PersonalizedShelf } from '../../core/models/abs.models';
             />
             <div class="hero-info">
               <h2 class="hero-title">{{ heroItem.media.metadata.title }}</h2>
-              <p class="hero-byline">
-                {{ heroAuthors(heroItem) }}
-                @if (heroItem.media.metadata.narrators?.length) {
-                  <span class="hero-narrator"> · Narrated by {{ heroItem.media.metadata.narrators.join(', ') }}</span>
+              <div class="hero-badges">
+                @for (a of heroItem.media.metadata.authors ?? []; track a.id) {
+                  <span class="hero-badge author"><i class="pi pi-user"></i>{{ a.name }}</span>
                 }
-              </p>
+                @for (n of heroItem.media.metadata.narrators ?? []; track n) {
+                  <span class="hero-badge narrator"><i class="pi pi-microphone"></i>{{ n }}</span>
+                }
+              </div>
               @if (heroItem.media.metadata.description) {
                 <p class="hero-synopsis">{{ stripHtml(heroItem.media.metadata.description) }}</p>
               }
               <div class="hero-progress-section">
-                <p-progressBar
-                  [value]="(heroItem.userMediaProgress?.progress ?? 0) * 100"
-                  [showValue]="false"
-                />
-                <div class="hero-progress-meta">
-                  <span>{{ formatTime(heroItem.userMediaProgress?.currentTime ?? 0) }} / {{ formatTime(heroItem.media.duration) }}</span>
-                  @if (heroItem.media.chapters?.length) {
-                    <span>Chapter {{ currentChapterIndex(heroItem) + 1 }} of {{ heroItem.media.chapters.length }}</span>
-                  }
-                </div>
+                @if (heroProgress && heroProgress.progress > 0) {
+                  <p-progressBar [value]="heroProgress.progress * 100" [showValue]="false" />
+                  <div class="hero-progress-meta">
+                    <span>{{ formatTime(heroProgress.currentTime) }} / {{ formatTime(heroItem.media.duration) }}</span>
+                    @if (heroItem.media.chapters?.length) {
+                      <span>Chapter {{ currentChapterIndex(heroItem, heroProgress.currentTime) + 1 }} of {{ heroItem.media.chapters.length }}</span>
+                    }
+                  </div>
+                } @else {
+                  <div class="not-started">
+                    <span class="not-started-label">Not Started</span>
+                    <span class="not-started-duration">{{ formatTime(heroItem.media.duration) }}</span>
+                  </div>
+                }
               </div>
             </div>
           </div>
@@ -150,7 +156,6 @@ import { LibraryItem, PersonalizedShelf } from '../../core/models/abs.models';
       flex-direction: column;
       justify-content: center;
       gap: 10px;
-      max-width: 640px;
     }
 
     .hero-title {
@@ -158,17 +163,56 @@ import { LibraryItem, PersonalizedShelf } from '../../core/models/abs.models';
       font-weight: 800;
       color: var(--text-primary);
       letter-spacing: -0.02em;
+      line-height: 1.1;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
       overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      word-break: break-word;
     }
 
-    .hero-byline {
-      font-size: clamp(13px, 1vw, 20px);
+    .hero-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 8px;
+      margin: 2px 0;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: clamp(11px, 0.75vw, 16px);
+      font-weight: 500;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       color: var(--text-secondary);
+      white-space: nowrap;
+
+      i { font-size: 0.85em; }
     }
 
-    .hero-narrator {
+    .hero-badge.author { color: var(--accent-bright); }
+    .hero-badge.narrator { color: var(--text-secondary); }
+
+    .not-started {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+    }
+
+    .not-started-label {
+      font-size: clamp(13px, 0.9vw, 20px);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent-bright);
+    }
+
+    .not-started-duration {
+      font-size: clamp(11px, 0.75vw, 16px);
       color: var(--text-muted);
     }
 
@@ -234,6 +278,7 @@ import { LibraryItem, PersonalizedShelf } from '../../core/models/abs.models';
 export class HomeComponent implements OnInit {
   shelves: PersonalizedShelf[] = [];
   heroItem: LibraryItem | null = null;
+  heroProgress: MediaProgress | null = null;
   loading = true;
   greeting = '';
   username = '';
@@ -282,11 +327,16 @@ export class HomeComponent implements OnInit {
     return h > 0 ? `${h}h ${m}m` : `${m}m`;
   }
 
-  currentChapterIndex(item: LibraryItem): number {
-    const t = item.userMediaProgress?.currentTime ?? 0;
+  currentChapterIndex(item: LibraryItem, currentTime: number): number {
     const chapters = item.media?.chapters ?? [];
-    const idx = chapters.findIndex(c => t >= c.start && t < c.end);
-    return idx === -1 ? (t > 0 ? chapters.length - 1 : 0) : idx;
+    const idx = chapters.findIndex(c => currentTime >= c.start && currentTime < c.end);
+    return idx === -1 ? (currentTime > 0 ? chapters.length - 1 : 0) : idx;
+  }
+
+  private progressFor(item: LibraryItem): MediaProgress | null {
+    if (item.userMediaProgress) return item.userMediaProgress;
+    const stored = this.auth.user()?.mediaProgress?.find(p => p.libraryItemId === item.id);
+    return stored ?? null;
   }
 
   heroAuthors(item: LibraryItem): string {
@@ -299,6 +349,7 @@ export class HomeComponent implements OnInit {
 
   onBookFocus(item: LibraryItem): void {
     this.heroItem = item;
+    this.heroProgress = this.progressFor(item);
   }
 
   stripHtml(s: string | null | undefined): string {
@@ -310,6 +361,7 @@ export class HomeComponent implements OnInit {
     const ra = this.shelves.find(s => s.id === 'recently-added');
     const candidates = (cl?.entities ?? ra?.entities ?? []) as LibraryItem[];
     this.heroItem = candidates.find(e => e.media?.metadata?.title) ?? null;
+    this.heroProgress = this.heroItem ? this.progressFor(this.heroItem) : null;
   }
 
   private sortShelves(shelves: PersonalizedShelf[]): PersonalizedShelf[] {

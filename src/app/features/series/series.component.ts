@@ -134,6 +134,8 @@ import { ButtonModule } from 'primeng/button';
       width: var(--series-fan-wrap-w);
       height: var(--series-fan-wrap-h);
       margin-bottom: 16px;
+      overflow: hidden;
+      border-radius: 8px;
     }
 
     .fan-cover {
@@ -141,9 +143,8 @@ import { ButtonModule } from 'primeng/button';
       width: var(--series-fan-cover-w);
       height: var(--series-fan-cover-h);
       object-fit: cover;
-      border-radius: 6px;
-      bottom: 0;
-      box-shadow: -6px 4px 14px rgba(0, 0, 0, 0.7);
+      top: 0;
+      box-shadow: 10px 0 18px rgba(0, 0, 0, 0.85);
     }
 
     .fan-placeholder {

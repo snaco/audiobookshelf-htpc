@@ -1,7 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { FocusableDirective } from '../../directives/focusable.directive';
-import { TooltipModule } from 'primeng/tooltip';
 import { PlayerService } from '../../../core/services/player.service';
 
 interface NavItem {
@@ -13,7 +12,7 @@ interface NavItem {
 @Component({
   selector: 'app-nav',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, FocusableDirective, TooltipModule],
+  imports: [RouterLink, RouterLinkActive, FocusableDirective],
   template: `
     <nav class="side-nav" data-focus-zone="nav">
       <div class="nav-top">
@@ -27,8 +26,6 @@ interface NavItem {
             routerLinkActive="active"
             appFocusable
             class="nav-item now-playing"
-            [pTooltip]="player.nowPlayingTitle() || 'Now Playing'"
-            tooltipPosition="right"
           >
             <i class="pi pi-play-circle"></i>
             <span class="nav-label">{{ player.nowPlayingTitle() || 'Now Playing' }}</span>
@@ -40,8 +37,6 @@ interface NavItem {
             routerLinkActive="active"
             appFocusable
             class="nav-item"
-            [pTooltip]="item.label"
-            tooltipPosition="right"
           >
             <i [class]="'pi ' + item.icon"></i>
             <span class="nav-label">{{ item.label }}</span>
@@ -54,8 +49,6 @@ interface NavItem {
           routerLinkActive="active"
           appFocusable
           class="nav-item"
-          pTooltip="Settings"
-          tooltipPosition="right"
         >
           <i class="pi pi-cog"></i>
           <span class="nav-label">Settings</span>

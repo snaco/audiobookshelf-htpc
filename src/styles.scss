@@ -35,10 +35,12 @@
 
   /* Series grid: 3 columns. nav=72, h-padding=96, gaps=2*32=64 → subtract 232px */
   --series-tile-size: clamp(200px, calc((100vw - 232px) / 3), 900px);
-  --series-fan-cover-w: clamp(110px, calc(var(--series-tile-size) * 0.38), 320px);
-  --series-fan-cover-h: clamp(165px, calc(var(--series-tile-size) * 0.57), 480px);
-  --series-fan-wrap-w: clamp(180px, calc(var(--series-tile-size) * 0.75), 600px);
-  --series-fan-wrap-h: clamp(200px, calc(var(--series-tile-size) * 0.65), 520px);
+  /* Square covers spread across the full card width. wrap-h equals cover size
+     so there's no gap above or below the spread inside the focus border. */
+  --series-fan-cover-w: clamp(140px, calc(var(--series-tile-size) * 0.5), 520px);
+  --series-fan-cover-h: var(--series-fan-cover-w);
+  --series-fan-wrap-w: clamp(180px, calc(var(--series-tile-size) - 32px), 900px);
+  --series-fan-wrap-h: var(--series-fan-cover-h);
 }
 
 /*
