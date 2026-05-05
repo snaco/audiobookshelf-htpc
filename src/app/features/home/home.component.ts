@@ -237,8 +237,12 @@ import { LibraryItem, MediaProgress, PersonalizedShelf } from '../../core/models
       margin-top: 4px;
       display: flex;
       flex-direction: column;
+      justify-content: center;
       gap: 8px;
       max-width: 420px;
+      /* Fixed height = progress bar (4px) + gap (8px) + meta text line (~1.5em at meta font size).
+         Clamp tracks the meta font clamp so the height grows with the viewport. */
+      height: clamp(34px, calc(12px + 1.5 * clamp(11px, 0.75vw, 16px)), 52px);
     }
 
     .hero-progress-meta {

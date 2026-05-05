@@ -23,7 +23,7 @@ export class PlayerService implements OnDestroy {
   private readonly audio = new Audio();
   private currentTrackIdx = 0;
   private syncInterval: ReturnType<typeof setInterval> | null = null;
-  private syncStartTime = 0;
+  private syncStartGlobalTime = 0;
 
   constructor(private absService: AudiobookshelfService, private zone: NgZone) {
     this.audio.addEventListener('timeupdate', () => this.zone.run(() => this.onTimeUpdate()));
@@ -83,10 +83,14 @@ export class PlayerService implements OnDestroy {
 
   togglePlay(): void {
     if (this.audio.paused) {
-      this.audio.play().then(() => this.isPlaying.set(true)).catch(() => {});
+      this.audio.play().then(() => {
+        this.isPlaying.set(true);
+        this.startPlaybackSync();
+      }).catch(() => {});
     } else {
       this.audio.pause();
       this.isPlaying.set(false);
+      this.stopPlaybackSync();
     }
   }
 
@@ -130,7 +134,9 @@ export class PlayerService implements OnDestroy {
     const idx = this.trackIndexForTime(t);
     const local = t - tracks[idx].startOffset;
     if (idx === this.currentTrackIdx) {
+      this.syncNow();
       this.audio.currentTime = local;
+      this.syncStartGlobalTime = t;
     } else {
       this.switchTrack(idx, local, !this.audio.paused);
     }
@@ -142,8 +148,13 @@ export class PlayerService implements OnDestroy {
     const idx = this.trackIndexForTime(t);
     const local = t - tracks[idx].startOffset;
     if (idx === this.currentTrackIdx) {
+      this.syncNow();
       this.audio.currentTime = local;
-      this.audio.play().then(() => this.isPlaying.set(true)).catch(() => {});
+      this.syncStartGlobalTime = t;
+      this.audio.play().then(() => {
+        this.isPlaying.set(true);
+        this.startPlaybackSync();
+      }).catch(() => {});
     } else {
       this.switchTrack(idx, local, true);
     }
@@ -172,6 +183,29 @@ export class PlayerService implements OnDestroy {
     }
   }
 
+  /** Sync current position immediately and reset the listened-time tracking point. */
+  private syncNow(): void {
+    const id = this.sessionId();
+    if (!id) return;
+    const t = this.globalTime();
+    const listened = Math.max(0, t - this.syncStartGlobalTime);
+    this.syncStartGlobalTime = t;
+    this.absService.syncSession(id, t, listened, this.duration()).subscribe();
+  }
+
+  /** Start the playback-only sync interval. Stops any existing one first. */
+  private startPlaybackSync(): void {
+    this.stopSyncInterval();
+    this.syncStartGlobalTime = this.globalTime();
+    this.syncInterval = setInterval(() => this.syncNow(), 5000);
+  }
+
+  /** Stop the interval and fire one immediate sync to save the current position. */
+  private stopPlaybackSync(): void {
+    this.stopSyncInterval();
+    this.syncNow();
+  }
+
   private initAudio(startTime: number): void {
     const tracks = this.tracks();
     if (!tracks.length) return;
@@ -183,23 +217,37 @@ export class PlayerService implements OnDestroy {
     this.audio.addEventListener('canplay', () => {
       this.zone.run(() => {
         this.audio.currentTime = Math.max(0, startTime - track.startOffset);
-        this.startSyncInterval();
-        this.audio.play().then(() => this.isPlaying.set(true)).catch(() => {});
+        this.syncStartGlobalTime = startTime;
+        this.audio.play().then(() => {
+          this.isPlaying.set(true);
+          this.startPlaybackSync();
+        }).catch(() => {});
       });
     }, { once: true });
   }
 
   private switchTrack(idx: number, localOffset: number, shouldPlay: boolean): void {
     const tracks = this.tracks();
-    if (idx >= tracks.length) { this.isPlaying.set(false); return; }
+    if (idx >= tracks.length) {
+      this.stopPlaybackSync();
+      this.isPlaying.set(false);
+      return;
+    }
 
+    this.syncNow();
     this.currentTrackIdx = idx;
     this.audio.src = this.absService.audioStreamUrl(tracks[idx].contentUrl);
 
     this.audio.addEventListener('canplay', () => {
       this.zone.run(() => {
         this.audio.currentTime = localOffset;
-        if (shouldPlay) this.audio.play().then(() => this.isPlaying.set(true)).catch(() => {});
+        this.syncStartGlobalTime = tracks[idx].startOffset + localOffset;
+        if (shouldPlay) {
+          this.audio.play().then(() => {
+            this.isPlaying.set(true);
+            this.startPlaybackSync();
+          }).catch(() => {});
+        }
       });
     }, { once: true });
   }
@@ -220,26 +268,19 @@ export class PlayerService implements OnDestroy {
     if (this.currentTrackIdx < this.tracks().length - 1) {
       this.switchTrack(this.currentTrackIdx + 1, 0, true);
     } else {
+      this.stopPlaybackSync();
       this.isPlaying.set(false);
     }
-  }
-
-  private startSyncInterval(): void {
-    this.syncStartTime = this.globalTime();
-    this.syncInterval = setInterval(() => {
-      const id = this.sessionId();
-      if (!id) return;
-      this.absService.syncSession(id, this.globalTime(), 5, this.duration()).subscribe();
-    }, 5000);
   }
 
   private doFinalSync(): void {
     const id = this.sessionId();
     if (!id) return;
+    this.stopSyncInterval();
     const t = this.globalTime();
-    const elapsed = t - this.syncStartTime;
-    this.absService.syncSession(id, t, elapsed, this.duration()).subscribe();
-    this.absService.closeSession(id, t, elapsed, this.duration()).subscribe();
+    const listened = Math.max(0, t - this.syncStartGlobalTime);
+    this.absService.syncSession(id, t, listened, this.duration()).subscribe();
+    this.absService.closeSession(id, t, listened, this.duration()).subscribe();
     this.sessionId.set(null);
   }
 }
