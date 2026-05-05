@@ -56,7 +56,7 @@ import { LibraryItem } from '../../core/models/abs.models';
     }
 
     .page-title {
-      font-size: 32px;
+      font-size: var(--font-page-title);
       font-weight: 800;
       color: var(--text-primary);
       letter-spacing: -0.02em;
@@ -64,13 +64,13 @@ import { LibraryItem } from '../../core/models/abs.models';
     }
 
     .count-text {
-      font-size: 13px;
+      font-size: var(--font-count);
       color: var(--text-muted);
     }
 
     .book-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+      grid-template-columns: repeat(5, 1fr);
       gap: 24px;
     }
 

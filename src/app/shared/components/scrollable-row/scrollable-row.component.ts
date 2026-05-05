@@ -23,7 +23,7 @@ import { CommonModule } from '@angular/common';
     }
 
     .row-title {
-      font-size: 18px;
+      font-size: var(--font-row-title);
       font-weight: 700;
       color: var(--text-primary);
       letter-spacing: -0.01em;

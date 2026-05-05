@@ -52,7 +52,7 @@ import { AudiobookshelfService } from '../../../core/services/audiobookshelf.ser
     .book-tile {
       display: flex;
       flex-direction: column;
-      width: 148px;
+      width: var(--tile-size);
       flex-shrink: 0;
       cursor: pointer;
       border-radius: var(--radius);
@@ -75,8 +75,8 @@ import { AudiobookshelfService } from '../../../core/services/audiobookshelf.ser
 
     .cover-wrap {
       position: relative;
-      width: 148px;
-      height: 148px;
+      width: var(--tile-size);
+      aspect-ratio: 1;
       border-radius: var(--radius);
       overflow: hidden;
       background: var(--bg-card);
@@ -100,8 +100,8 @@ import { AudiobookshelfService } from '../../../core/services/audiobookshelf.ser
     }
 
     .check-badge {
-      width: 44px;
-      height: 44px;
+      width: var(--tile-badge-size);
+      height: var(--tile-badge-size);
       background: var(--success);
       border-radius: 50%;
       display: flex;
@@ -111,7 +111,7 @@ import { AudiobookshelfService } from '../../../core/services/audiobookshelf.ser
 
       i {
         color: white;
-        font-size: 20px;
+        font-size: var(--tile-badge-icon);
         font-weight: 700;
       }
     }
@@ -132,14 +132,14 @@ import { AudiobookshelfService } from '../../../core/services/audiobookshelf.ser
     }
 
     .book-title {
-      font-size: 13px;
+      font-size: var(--tile-font-title);
       font-weight: 500;
       color: var(--text-primary);
       display: block;
     }
 
     .book-author {
-      font-size: 11px;
+      font-size: var(--tile-font-author);
       display: block;
     }
   `]

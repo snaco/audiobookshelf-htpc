@@ -60,7 +60,7 @@ import { LibraryItem, PersonalizedShelf } from '../../core/models/abs.models';
     }
 
     .page-title {
-      font-size: 32px;
+      font-size: var(--font-page-title);
       font-weight: 800;
       color: var(--text-primary);
       letter-spacing: -0.02em;
@@ -68,7 +68,7 @@ import { LibraryItem, PersonalizedShelf } from '../../core/models/abs.models';
     }
 
     .page-subtitle {
-      font-size: 15px;
+      font-size: var(--font-page-subtitle);
       color: var(--text-muted);
     }
 

@@ -15,6 +15,23 @@
   --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.6);
   --nav-width: 72px;
   --radius: 10px;
+
+  /* Tile size: fills exactly 5 columns in the library grid at any resolution.
+     Formula: (viewport - nav - h-padding - 4 gaps) / 5
+     nav=72px, h-padding=96px (48px each side), gaps=4*24px=96px → subtract 264px total */
+  --tile-size: clamp(148px, calc((100vw - 264px) / 5), 900px);
+
+  /* Tile typography and badge — scale with tile size */
+  --tile-font-title: clamp(13px, calc(var(--tile-size) * 0.042), 36px);
+  --tile-font-author: clamp(11px, calc(var(--tile-size) * 0.035), 30px);
+  --tile-badge-size: clamp(44px, calc(var(--tile-size) * 0.14), 120px);
+  --tile-badge-icon: clamp(20px, calc(var(--tile-size) * 0.065), 56px);
+
+  /* Page-level typography — scale with viewport width */
+  --font-page-title: clamp(32px, 1.7vw, 72px);
+  --font-page-subtitle: clamp(15px, 0.8vw, 32px);
+  --font-row-title: clamp(18px, 1vw, 40px);
+  --font-count: clamp(13px, 0.7vw, 28px);
 }
 
 /*
