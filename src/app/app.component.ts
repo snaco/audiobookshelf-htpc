@@ -23,8 +23,8 @@ import { MessageService } from 'primeng/api';
           <h2 class="exit-title">Close Audiobookshelf?</h2>
           <p class="exit-message">There's nowhere to go back to. Close the app?</p>
           <div class="exit-actions">
-            <button class="exit-btn cancel" #exitCancel (click)="cancelExit()" (keydown.enter)="cancelExit()">Cancel</button>
-            <button class="exit-btn confirm" (click)="closeApp()" (keydown.enter)="closeApp()">Close</button>
+            <button class="exit-btn cancel" #exitCancel (click)="cancelExit()">Cancel</button>
+            <button class="exit-btn confirm" #exitConfirm (click)="closeApp()">Close</button>
           </div>
         </div>
       </div>
@@ -145,7 +145,8 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   isLoginRoute = false;
   showExitConfirm = false;
 
-  @ViewChild('exitCancel') exitCancelBtn?: ElementRef<HTMLButtonElement>;
+  @ViewChild('exitCancel')  exitCancelBtn?:  ElementRef<HTMLButtonElement>;
+  @ViewChild('exitConfirm') exitConfirmBtn?: ElementRef<HTMLButtonElement>;
 
   // Tracks SPA back-stack depth so we can prompt before leaving the app rather
   // than silently no-oping (or backing past the SPA into the host browser).
@@ -172,15 +173,24 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
+    if (this.showExitConfirm) {
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+        event.preventDefault();
+        this.toggleDialogFocus();
+      }
+      // Let Enter pass through so the focused button fires natively
+      return;
+    }
+
     const dir: Record<string, 'up' | 'down' | 'left' | 'right'> = {
       ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right'
     };
     if (dir[event.key]) {
       event.preventDefault();
-      if (!this.focusService.blocked) this.focusService.moveFocus(dir[event.key]);
+      this.focusService.moveFocus(dir[event.key]);
     } else if (event.key === 'Enter') {
       event.preventDefault();
-      if (!this.focusService.blocked) this.focusService.activate();
+      this.focusService.activate();
     }
   }
 
@@ -207,7 +217,11 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnInit(): void {
     this.gamepadService.start();
     this.gamepadSub = this.gamepadService.actions$.subscribe(({ action }) => {
-      if (action === 'back') this.goBack();
+      if (action === 'back') { this.goBack(); return; }
+      if (this.showExitConfirm) {
+        if (action === 'left' || action === 'right') this.toggleDialogFocus();
+        if (action === 'select') (document.activeElement as HTMLElement)?.click();
+      }
     });
   }
 
@@ -253,5 +267,13 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     this.showExitConfirm = true;
     this.focusService.blocked = true;
     setTimeout(() => this.exitCancelBtn?.nativeElement.focus(), 0);
+  }
+
+  private toggleDialogFocus(): void {
+    if (document.activeElement === this.exitConfirmBtn?.nativeElement) {
+      this.exitCancelBtn?.nativeElement.focus();
+    } else {
+      this.exitConfirmBtn?.nativeElement.focus();
+    }
   }
 }

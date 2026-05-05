@@ -280,6 +280,7 @@ export class HomeComponent implements OnInit {
   heroItem: LibraryItem | null = null;
   heroProgress: MediaProgress | null = null;
   loading = true;
+  private pendingHeroId: string | null = null;
   greeting = '';
   username = '';
 
@@ -348,16 +349,20 @@ export class HomeComponent implements OnInit {
   }
 
   onBookFocus(item: LibraryItem): void {
-    this.heroItem = item;
-    this.heroProgress = this.progressFor(item);
-    this.enrichHero(item.id);
+    this.pendingHeroId = item.id;
+    this.absService.getLibraryItem(item.id).subscribe(full => {
+      if (this.pendingHeroId !== full.id) return;
+      this.heroItem = full;
+      this.heroProgress = this.progressFor(full);
+    });
   }
 
   private enrichHero(itemId: string): void {
+    this.pendingHeroId = itemId;
     this.absService.getLibraryItem(itemId).subscribe(full => {
-      if (this.heroItem?.id === itemId) {
-        this.heroItem = { ...this.heroItem, ...full };
-      }
+      if (this.pendingHeroId !== full.id) return;
+      this.heroItem = full;
+      this.heroProgress = this.progressFor(full);
     });
   }
 
