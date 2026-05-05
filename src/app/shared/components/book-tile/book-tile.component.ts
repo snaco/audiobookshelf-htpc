@@ -17,6 +17,7 @@ import { AudiobookshelfService } from '../../../core/services/audiobookshelf.ser
       [class.finished]="isFinished"
       (click)="onSelect()"
       (keydown.enter)="onSelect()"
+      (focus)="focused.emit(item)"
     >
       <div class="cover-wrap">
         <img
@@ -56,17 +57,11 @@ import { AudiobookshelfService } from '../../../core/services/audiobookshelf.ser
       flex-shrink: 0;
       cursor: pointer;
       border-radius: var(--radius);
-      transition: transform 0.2s;
-
-      &:focus-visible {
-        outline: 2px solid var(--accent);
-        outline-offset: 4px;
-      }
-
-      &:hover .cover-img, &:focus-visible .cover-img {
-        transform: scale(1.03);
-        box-shadow: 0 8px 32px rgba(139, 92, 246, 0.3);
-      }
+      overflow: visible;
+      position: relative;
+      transform: scale(0.8);
+      transform-origin: top center;
+      transition: transform 0.18s ease, filter 0.18s ease;
 
       &.finished .cover-img {
         filter: brightness(0.5) saturate(0.6);
@@ -82,12 +77,22 @@ import { AudiobookshelfService } from '../../../core/services/audiobookshelf.ser
       background: var(--bg-card);
     }
 
+    .book-tile[data-kf] {
+      outline: none !important;
+      transform: scale(1);
+      filter: drop-shadow(0 12px 32px rgba(0, 0, 0, 0.85));
+      z-index: 10;
+    }
+
+    .book-tile[data-kf] .cover-wrap {
+      box-shadow: 0 0 0 3px white;
+    }
+
     .cover-img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       background: var(--bg-card);
-      transition: transform 0.2s, box-shadow 0.2s;
     }
 
     .finished-overlay {
@@ -148,6 +153,7 @@ export class BookTileComponent implements OnInit {
   @Input({ required: true }) item!: LibraryItem;
   @Input() mediaProgress?: MediaProgress;
   @Output() selected = new EventEmitter<LibraryItem>();
+  @Output() focused = new EventEmitter<LibraryItem>();
 
   coverUrl = '';
   title = '';

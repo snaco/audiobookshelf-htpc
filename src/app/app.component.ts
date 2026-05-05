@@ -19,7 +19,9 @@ import { MessageService } from 'primeng/api';
     <p-toast position="top-right" />
     <div class="app-shell" [class.login-layout]="isLoginRoute">
       @if (!isLoginRoute) {
-        <app-nav />
+        <div class="nav-slot">
+          <app-nav />
+        </div>
       }
       <main class="main-content">
         <router-outlet />
@@ -37,6 +39,13 @@ import { MessageService } from 'primeng/api';
 
     .login-layout {
       display: block;
+    }
+
+    .nav-slot {
+      width: var(--nav-width);
+      flex-shrink: 0;
+      position: relative;
+      height: 100%;
     }
 
     .main-content {

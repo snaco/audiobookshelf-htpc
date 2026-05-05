@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AudiobookshelfService } from '../../core/services/audiobookshelf.service';
-import { SeriesTileComponent } from '../../shared/components/series-tile/series-tile.component';
 import { FocusableDirective } from '../../shared/directives/focusable.directive';
 import { Series } from '../../core/models/abs.models';
 import { ButtonModule } from 'primeng/button';
@@ -10,7 +9,7 @@ import { ButtonModule } from 'primeng/button';
 @Component({
   selector: 'app-series',
   standalone: true,
-  imports: [CommonModule, SeriesTileComponent, FocusableDirective, ButtonModule],
+  imports: [CommonModule, FocusableDirective, ButtonModule],
   template: `
     <div class="series-page">
       <header class="page-header">
@@ -31,17 +30,17 @@ import { ButtonModule } from 'primeng/button';
         </div>
       } @else {
         <div data-focus-zone="grid">
-        <div class="series-list">
-          @for (s of series; track s.id) {
-            <div class="series-row" (click)="onSeriesSelect(s)" (keydown.enter)="onSeriesSelect(s)" appFocusable>
-              <div class="fan-section">
+          <div class="series-grid">
+            @for (s of series; track s.id) {
+              <div class="series-card" appFocusable
+                   (click)="onSeriesSelect(s)" (keydown.enter)="onSeriesSelect(s)">
                 <div class="fan-wrap">
                   @for (cover of getCovers(s); track cover; let i = $index) {
                     <img
                       [src]="cover"
                       [alt]="s.name"
                       class="fan-cover"
-                      [style]="getFanStyle(i, getCovers(s).length)"
+                      [style]="getSpreadStyle(i, getCovers(s).length)"
                       (error)="onImgError($event)"
                       loading="lazy"
                     />
@@ -52,36 +51,24 @@ import { ButtonModule } from 'primeng/button';
                     </div>
                   }
                 </div>
+                <div class="series-meta">
+                  <span class="series-name truncate">{{ s.name }}</span>
+                </div>
               </div>
+            }
+          </div>
 
-              <div class="series-info">
-                <h2 class="series-name">{{ s.name }}</h2>
-                <p class="series-count text-muted">{{ s.numBooks }} book{{ s.numBooks !== 1 ? 's' : '' }}</p>
-                @if (s.books && s.books.length) {
-                  <p class="series-authors text-secondary">
-                    {{ getAuthors(s) }}
-                  </p>
-                }
-              </div>
-
-              <div class="series-action">
-                <i class="pi pi-chevron-right" style="color: var(--text-muted)"></i>
-              </div>
+          @if (hasMore) {
+            <div class="load-more">
+              <p-button
+                label="Load More"
+                [outlined]="true"
+                [loading]="loading"
+                (onClick)="loadMore()"
+                appFocusable
+              />
             </div>
           }
-        </div>
-
-        @if (hasMore) {
-          <div class="load-more">
-            <p-button
-              label="Load More"
-              [outlined]="true"
-              [loading]="loading"
-              (onClick)="loadMore()"
-              appFocusable
-            />
-          </div>
-        }
         </div>
       }
     </div>
@@ -98,7 +85,7 @@ import { ButtonModule } from 'primeng/button';
     }
 
     .page-title {
-      font-size: 32px;
+      font-size: var(--font-page-title);
       font-weight: 800;
       color: var(--text-primary);
       letter-spacing: -0.02em;
@@ -106,87 +93,83 @@ import { ButtonModule } from 'primeng/button';
     }
 
     .count-text {
-      font-size: 13px;
+      font-size: var(--font-count);
       color: var(--text-muted);
     }
 
-    .series-list {
+    .series-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+    }
+
+    .series-card {
       display: flex;
       flex-direction: column;
-      gap: 2px;
-    }
-
-    .series-row {
-      display: flex;
       align-items: center;
-      gap: 24px;
-      padding: 20px 16px;
-      border-radius: 12px;
       cursor: pointer;
-      transition: background 0.15s;
-
-      &:hover, &:focus-visible {
-        background: var(--bg-hover);
-        outline: 2px solid var(--accent);
-        outline-offset: -2px;
-      }
+      border-radius: var(--radius);
+      padding: 16px;
+      overflow: visible;
+      position: relative;
+      transform: scale(0.8);
+      transform-origin: top center;
+      transition: transform 0.18s ease, filter 0.18s ease;
     }
 
-    .fan-section {
-      flex-shrink: 0;
+    .series-card[data-kf] {
+      outline: none !important;
+      transform: scale(1);
+      filter: drop-shadow(0 12px 32px rgba(0, 0, 0, 0.85));
+      z-index: 10;
+    }
+
+    .series-card[data-kf] .fan-wrap {
+      box-shadow: 0 0 0 3px white;
+      border-radius: 8px;
     }
 
     .fan-wrap {
       position: relative;
-      width: 200px;
-      height: 120px;
+      width: var(--series-fan-wrap-w);
+      height: var(--series-fan-wrap-h);
+      margin-bottom: 16px;
     }
 
     .fan-cover {
       position: absolute;
-      width: 75px;
-      height: 112px;
+      width: var(--series-fan-cover-w);
+      height: var(--series-fan-cover-h);
       object-fit: cover;
       border-radius: 6px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-      top: 4px;
+      bottom: 0;
+      box-shadow: -6px 4px 14px rgba(0, 0, 0, 0.7);
     }
 
     .fan-placeholder {
-      width: 80px;
-      height: 112px;
+      width: var(--series-fan-cover-w);
+      height: var(--series-fan-cover-h);
       background: var(--bg-card);
       border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
       color: var(--text-muted);
-      i { font-size: 24px; }
+
+      i { font-size: 36px; }
     }
 
-    .series-info {
-      flex: 1;
-      min-width: 0;
+    .series-meta {
+      width: 100%;
+      text-align: center;
+      padding: 0 4px;
     }
 
     .series-name {
-      font-size: 20px;
-      font-weight: 700;
+      display: block;
+      font-size: var(--tile-font-title);
+      font-weight: 600;
       color: var(--text-primary);
-      margin-bottom: 4px;
-    }
-
-    .series-count {
-      font-size: 13px;
-      margin-bottom: 6px;
-    }
-
-    .series-authors {
-      font-size: 13px;
-    }
-
-    .series-action {
-      flex-shrink: 0;
     }
 
     .loading-state, .empty-state {
@@ -213,10 +196,6 @@ export class SeriesComponent implements OnInit {
   page = 0;
   libraryId = '';
 
-  private readonly FAN_ROTATIONS = [-16, -6, 5, 16];
-  private readonly FAN_LEFT = [0, 30, 62, 96];
-  private readonly FAN_TOP = [8, 3, 0, 6];
-
   constructor(
     private absService: AudiobookshelfService,
     private router: Router
@@ -237,18 +216,10 @@ export class SeriesComponent implements OnInit {
     return (s.books ?? []).slice(0, 4).map(b => this.absService.coverUrl(b.id));
   }
 
-  getFanStyle(index: number, total: number): string {
-    const rot = this.FAN_ROTATIONS[index] ?? (index - (total - 1) / 2) * 10;
-    const left = this.FAN_LEFT[index] ?? index * 30;
-    const top = this.FAN_TOP[index] ?? 0;
-    const brightness = 0.55 + (index / Math.max(total - 1, 1)) * 0.45;
-    return `transform: rotate(${rot}deg); left: ${left}px; top: ${top}px; filter: brightness(${brightness});`;
-  }
-
-  getAuthors(s: Series): string {
-    const names = new Set<string>();
-    s.books?.forEach(b => b.media?.metadata?.authors?.forEach(a => names.add(a.name)));
-    return Array.from(names).slice(0, 3).join(', ');
+  getSpreadStyle(index: number, total: number): string {
+    const ratio = total > 1 ? index / (total - 1) : 0.5;
+    const z = total - index;
+    return `left: calc((var(--series-fan-wrap-w) - var(--series-fan-cover-w)) * ${ratio}); z-index: ${z};`;
   }
 
   onSeriesSelect(s: Series): void {

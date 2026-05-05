@@ -48,16 +48,23 @@ import { AudiobookshelfService } from '../../../core/services/audiobookshelf.ser
       width: 180px;
       flex-shrink: 0;
       cursor: pointer;
+      overflow: visible;
+      position: relative;
+      transform: scale(0.8);
+      transform-origin: top center;
+      transition: transform 0.18s ease, filter 0.18s ease;
+    }
 
-      &:focus-visible {
-        outline: 2px solid var(--accent);
-        outline-offset: 4px;
-        border-radius: var(--radius);
-      }
+    .series-tile[data-kf] {
+      outline: none !important;
+      transform: scale(1);
+      filter: drop-shadow(0 12px 32px rgba(0, 0, 0, 0.85));
+      z-index: 10;
+    }
 
-      &:hover .fan-cover, &:focus-visible .fan-cover {
-        filter: brightness(1.1);
-      }
+    .series-tile[data-kf] .fan-wrap {
+      box-shadow: 0 0 0 3px white;
+      border-radius: 8px;
     }
 
     .fan-wrap {
@@ -76,7 +83,6 @@ import { AudiobookshelfService } from '../../../core/services/audiobookshelf.ser
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
       top: 10px;
       left: 20px;
-      transition: filter 0.2s;
     }
 
     .fan-placeholder {

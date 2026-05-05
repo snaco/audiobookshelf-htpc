@@ -32,6 +32,13 @@
   --font-page-subtitle: clamp(15px, 0.8vw, 32px);
   --font-row-title: clamp(18px, 1vw, 40px);
   --font-count: clamp(13px, 0.7vw, 28px);
+
+  /* Series grid: 3 columns. nav=72, h-padding=96, gaps=2*32=64 → subtract 232px */
+  --series-tile-size: clamp(200px, calc((100vw - 232px) / 3), 900px);
+  --series-fan-cover-w: clamp(110px, calc(var(--series-tile-size) * 0.38), 320px);
+  --series-fan-cover-h: clamp(165px, calc(var(--series-tile-size) * 0.57), 480px);
+  --series-fan-wrap-w: clamp(180px, calc(var(--series-tile-size) * 0.75), 600px);
+  --series-fan-wrap-h: clamp(200px, calc(var(--series-tile-size) * 0.65), 520px);
 }
 
 /*
@@ -161,14 +168,15 @@ html, body {
 
 /* Focus ring for gamepad/keyboard navigation — data-kf is set programmatically
    because :focus-visible doesn't fire for programmatic el.focus() without prior
-   keyboard interaction (e.g. gamepad polling path). */
+   keyboard interaction (e.g. gamepad polling path).
+   Book/series tiles override this with the scale+white-border treatment. */
 [data-kf] {
-  outline: 2px solid var(--accent) !important;
-  outline-offset: 4px;
+  outline: 2px solid rgba(255, 255, 255, 0.5) !important;
+  outline-offset: 3px;
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent) !important;
+  outline: 2px solid rgba(255, 255, 255, 0.5) !important;
   outline-offset: 2px;
 }
 

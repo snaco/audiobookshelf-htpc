@@ -19,6 +19,7 @@ interface NavItem {
       <div class="nav-top">
         <div class="nav-logo">
           <i class="pi pi-headphones"></i>
+          <span class="nav-label">Audiobookshelf</span>
         </div>
         @if (player.nowPlayingItemId(); as itemId) {
           <a
@@ -30,6 +31,7 @@ interface NavItem {
             tooltipPosition="right"
           >
             <i class="pi pi-play-circle"></i>
+            <span class="nav-label">{{ player.nowPlayingTitle() || 'Now Playing' }}</span>
           </a>
         }
         @for (item of navItems; track item.route) {
@@ -42,6 +44,7 @@ interface NavItem {
             tooltipPosition="right"
           >
             <i [class]="'pi ' + item.icon"></i>
+            <span class="nav-label">{{ item.label }}</span>
           </a>
         }
       </div>
@@ -55,56 +58,79 @@ interface NavItem {
           tooltipPosition="right"
         >
           <i class="pi pi-cog"></i>
+          <span class="nav-label">Settings</span>
         </a>
       </div>
     </nav>
   `,
   styles: [`
     .side-nav {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      width: var(--nav-width);
+      position: absolute;
+      left: 0;
+      top: 0;
       height: 100%;
+      width: var(--nav-width);
       background: var(--bg-secondary);
       border-right: 1px solid var(--border);
       padding: 12px 0;
-      flex-shrink: 0;
+      overflow: hidden;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                  box-shadow 0.25s ease;
+
+      &:focus-within {
+        width: 240px;
+        box-shadow: 4px 0 32px rgba(0, 0, 0, 0.6);
+      }
     }
 
     .nav-top {
       display: flex;
       flex-direction: column;
-      align-items: center;
+      align-items: flex-start;
       gap: 4px;
+      width: 100%;
+      padding: 0 12px;
     }
 
     .nav-bottom {
       display: flex;
       flex-direction: column;
-      align-items: center;
+      align-items: flex-start;
+      width: 100%;
+      padding: 0 12px;
     }
 
     .nav-logo {
-      width: 44px;
-      height: 44px;
+      width: 100%;
+      height: 48px;
       display: flex;
       align-items: center;
-      justify-content: center;
+      gap: 14px;
       margin-bottom: 16px;
+      padding: 0 12px;
       color: var(--accent);
+      overflow: hidden;
+      white-space: nowrap;
 
       i {
-        font-size: 28px;
+        font-size: 24px;
+        flex-shrink: 0;
+        width: 24px;
+        text-align: center;
       }
     }
 
     .nav-item {
       display: flex;
       align-items: center;
-      justify-content: center;
-      width: 48px;
+      width: 100%;
       height: 48px;
+      padding: 0 12px;
+      gap: 14px;
       border-radius: 12px;
       color: var(--text-muted);
       text-decoration: none;
@@ -112,21 +138,26 @@ interface NavItem {
       cursor: pointer;
       border: none;
       background: transparent;
+      overflow: hidden;
+      white-space: nowrap;
 
       i {
         font-size: 20px;
+        flex-shrink: 0;
+        width: 24px;
+        text-align: center;
       }
 
       &:hover, &:focus-visible {
         color: var(--text-primary);
         background: var(--bg-hover);
-        outline: 2px solid var(--accent);
-        outline-offset: 2px;
+        outline: none;
       }
 
       &.active {
-        color: var(--accent);
-        background: rgba(139, 92, 246, 0.15);
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 10px;
+        color: white;
       }
 
       &.now-playing {
@@ -134,6 +165,21 @@ interface NavItem {
         margin-bottom: 8px;
 
         i { font-size: 26px; }
+      }
+    }
+
+    .nav-label {
+      opacity: 0;
+      font-size: 15px;
+      font-weight: 500;
+      color: inherit;
+      white-space: nowrap;
+      overflow: hidden;
+      transition: opacity 0.12s ease;
+
+      .side-nav:focus-within & {
+        opacity: 1;
+        transition-delay: 0.12s;
       }
     }
   `]
