@@ -41,7 +41,12 @@ import { LibraryItem, MediaProgress, PersonalizedShelf } from '../../core/models
                 <p class="hero-synopsis">{{ stripHtml(heroItem.media.metadata.description) }}</p>
               }
               <div class="hero-progress-section">
-                @if (heroProgress && heroProgress.progress > 0) {
+                @if (heroProgress && heroProgress.progress >= 1) {
+                  <div class="not-started">
+                    <span class="not-started-label finished">Finished</span>
+                    <span class="not-started-duration">{{ formatTime(heroItem.media.duration) }}</span>
+                  </div>
+                } @else if (heroProgress && heroProgress.progress > 0) {
                   <p-progressBar [value]="heroProgress.progress * 100" [showValue]="false" />
                   <div class="hero-progress-meta">
                     <span>{{ formatTime(heroProgress.currentTime) }} / {{ formatTime(heroItem.media.duration) }}</span>
@@ -209,6 +214,8 @@ import { LibraryItem, MediaProgress, PersonalizedShelf } from '../../core/models
       letter-spacing: 0.08em;
       text-transform: uppercase;
       color: var(--accent-bright);
+
+      &.finished { color: #4ade80; }
     }
 
     .not-started-duration {
