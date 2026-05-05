@@ -177,10 +177,10 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     };
     if (dir[event.key]) {
       event.preventDefault();
-      this.focusService.moveFocus(dir[event.key]);
+      if (!this.focusService.blocked) this.focusService.moveFocus(dir[event.key]);
     } else if (event.key === 'Enter') {
       event.preventDefault();
-      this.focusService.activate();
+      if (!this.focusService.blocked) this.focusService.activate();
     }
   }
 
@@ -219,10 +219,12 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
   cancelExit(): void {
     this.showExitConfirm = false;
+    this.focusService.blocked = false;
   }
 
   closeApp(): void {
     this.showExitConfirm = false;
+    this.focusService.blocked = false;
     const electron = (window as unknown as { electronAPI?: { close?: () => void } }).electronAPI;
     if (electron?.close) {
       electron.close();
@@ -249,6 +251,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private confirmExit(): void {
     this.showExitConfirm = true;
+    this.focusService.blocked = true;
     setTimeout(() => this.exitCancelBtn?.nativeElement.focus(), 0);
   }
 }

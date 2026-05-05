@@ -4,6 +4,7 @@ import { Injectable, ElementRef } from '@angular/core';
 export class FocusService {
   private focusables = new Set<ElementRef>();
   private lastFocused: HTMLElement | null = null;
+  blocked = false;
 
   register(el: ElementRef): void {
     this.focusables.add(el);
@@ -14,6 +15,7 @@ export class FocusService {
   }
 
   moveFocus(direction: 'up' | 'down' | 'left' | 'right'): void {
+    if (this.blocked) return;
     const current = document.activeElement as HTMLElement | null;
     if (!current || current === document.body) {
       this.focusFirst();
@@ -31,6 +33,7 @@ export class FocusService {
   }
 
   activate(): void {
+    if (this.blocked) return;
     const current = document.activeElement as HTMLElement;
     if (current && current !== document.body) current.click();
   }

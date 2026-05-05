@@ -97,6 +97,11 @@ export class AudiobookshelfService {
     return this.getLibraryItems(libraryId, { filter, limit: 100, include: 'progress' });
   }
 
+  getLibraryItem(itemId: string): Observable<LibraryItem> {
+    const params = new HttpParams().set('expanded', '1');
+    return this.get<LibraryItem>(`/api/items/${itemId}`, params);
+  }
+
   getCurrentUser(): Observable<ABSUser> {
     return this.get<ABSUser>('/api/me');
   }

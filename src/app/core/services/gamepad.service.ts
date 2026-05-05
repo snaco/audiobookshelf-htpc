@@ -50,6 +50,11 @@ export class GamepadService implements OnDestroy {
   }
 
   private poll(): void {
+    if (!document.hasFocus()) {
+      this.rafId = requestAnimationFrame(() => this.poll());
+      return;
+    }
+
     const gamepads = (navigator.getGamepads?.() ?? []).filter((g): g is Gamepad => !!g);
 
     // OR-aggregate every action's "is the user pressing it right now?"

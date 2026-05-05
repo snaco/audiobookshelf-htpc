@@ -350,6 +350,15 @@ export class HomeComponent implements OnInit {
   onBookFocus(item: LibraryItem): void {
     this.heroItem = item;
     this.heroProgress = this.progressFor(item);
+    this.enrichHero(item.id);
+  }
+
+  private enrichHero(itemId: string): void {
+    this.absService.getLibraryItem(itemId).subscribe(full => {
+      if (this.heroItem?.id === itemId) {
+        this.heroItem = { ...this.heroItem, ...full };
+      }
+    });
   }
 
   stripHtml(s: string | null | undefined): string {
@@ -362,6 +371,7 @@ export class HomeComponent implements OnInit {
     const candidates = (cl?.entities ?? ra?.entities ?? []) as LibraryItem[];
     this.heroItem = candidates.find(e => e.media?.metadata?.title) ?? null;
     this.heroProgress = this.heroItem ? this.progressFor(this.heroItem) : null;
+    if (this.heroItem) this.enrichHero(this.heroItem.id);
   }
 
   private sortShelves(shelves: PersonalizedShelf[]): PersonalizedShelf[] {
